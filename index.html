@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Ultra Click Counter</title>
+
+<style>
+    *{
+        margin:0;
+        padding:0;
+        box-sizing:border-box;
+        font-family:Arial, sans-serif;
+    }
+
+    body{
+        background:#0f1117;
+        overflow:hidden;
+        height:100vh;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        flex-direction:column;
+        color:white;
+        user-select:none;
+    }
+
+    #counter{
+        position:absolute;
+        top:60px;
+        font-size:60px;
+        font-weight:bold;
+        color:#00ffcc;
+        text-shadow:0 0 20px #00ffcc88;
+        transform:translateZ(0);
+        will-change:contents;
+    }
+
+    #circle{
+        width:260px;
+        height:260px;
+        border-radius:50%;
+        background:linear-gradient(145deg,#00ffcc,#0088ff);
+        cursor:pointer;
+        box-shadow:
+            0 0 40px #00ffcc55,
+            inset 0 0 25px rgba(255,255,255,.25);
+        transition:transform .05s linear;
+        will-change:transform;
+        touch-action:manipulation;
+    }
+
+    #circle:active{
+        transform:scale(.96);
+    }
+</style>
+</head>
+<body>
+
+<div id="counter">0</div>
+<div id="circle"></div>
+
+<script>
+(() => {
+
+    // BigInt حتى يتحمل أرقام ضخمة جداً
+    let counter = 0n;
+
+    const counterEl = document.getElementById("counter");
+    const circle = document.getElementById("circle");
+
+    // Queue للنقرات لتقليل الضغط على الـ DOM
+    let pendingClicks = 0n;
+
+    // أسرع تسجيل ممكن للنقرات
+    function addClick(amount = 1n){
+        pendingClicks += amount;
+    }
+
+    // دعم الماوس + اللمس + الضغط المستمر
+    circle.addEventListener("pointerdown", (e) => {
+        addClick();
+    }, { passive:true });
+
+    // تحديث العداد بسرعة عالية بدون تهنيج
+    function renderLoop(){
+
+        if(pendingClicks > 0n){
+            counter += pendingClicks;
+            pendingClicks = 0n;
+
+            // تحويل سريع للنص
+            counterEl.textContent = counter.toString();
+        }
+
+        requestAnimationFrame(renderLoop);
+    }
+
+    renderLoop();
+
+    // منع أي lag عند spam clicks
+    circle.addEventListener("dragstart", e => e.preventDefault());
+
+})();
+</script>
+
+</body>
+</html>
